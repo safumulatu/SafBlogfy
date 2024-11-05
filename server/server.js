@@ -5,6 +5,7 @@ const {
   notFound,
   globalErrHandler,
 } = require("./middileware/globalErrorHandler");
+const categoryRouter = require("./routes/category/categoryRouter");
 require("dotenv").config();
 const app = express();
 
@@ -16,6 +17,7 @@ const PORT = process.env.PORT || 3000;
 connectDb();
 //! api endpoint
 app.use("/api/v1/users", userRouter);
+app.use("/api/v1/categories", categoryRouter);
 
 //? not found middleware
 app.use(notFound);
