@@ -48,7 +48,10 @@ exports.updateCategory = asyncHandler(async (req, res) => {
   const categoryToUpdate = await Category.findByIdAndUpdate(
     id,
     { name: req.body.name },
-    { new: true }
+    {
+      new: true,
+      runValidators: true,
+    }
   );
   if (!categoryToUpdate) {
     throw new Error("Category not found");

@@ -6,6 +6,8 @@ const {
   globalErrHandler,
 } = require("./middileware/globalErrorHandler");
 const categoryRouter = require("./routes/category/categoryRouter");
+const postRouter = require("./routes/posts/PostRoutes");
+const commentRoute = require("./routes/comment/commentsRoute");
 require("dotenv").config();
 const app = express();
 
@@ -18,6 +20,8 @@ connectDb();
 //! api endpoint
 app.use("/api/v1/users", userRouter);
 app.use("/api/v1/categories", categoryRouter);
+app.use("/api/v1/posts", postRouter);
+app.use("/api/v1/comments", commentRoute);
 
 //? not found middleware
 app.use(notFound);
