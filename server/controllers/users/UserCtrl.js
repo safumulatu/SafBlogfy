@@ -63,33 +63,29 @@ exports.getProfile = asyncHandler(async (req, res) => {
   const { password: hashedPassword, ...userInfo } = user._doc;
   res.json({ userInfo });
 });
-//@desc   Block user
-//@route  PUT /api/v1/users/block/:userIdToBlock
-//@access Private
 exports.blockUser = asyncHandler(async (req, res) => {
-  //! find the user to block
+  //* Find the user to be blocked
   const userIdToBlock = req.params.userIdToBlock;
   const userToBlock = await User.findById(userIdToBlock);
   if (!userToBlock) {
-    throw new Error("user to block not found");
+    throw new Error("User to block not found");
   }
-
-  //@ user who is blocking the user
+  // ! user who is blocking
   const userBlocking = req.userAuth._id;
-  // check if user is blocking him self
-  if (userIdToBlock.toString() === userBlocking) {
-    throw new Error("You can't block yourself");
+  // check if user is blocking him/herself
+  if (userIdToBlock.toString() === userBlocking.toString()) {
+    throw new Error("Cannot block yourself");
   }
-  //find the curreent user
+  //find the current user
   const currentUser = await User.findById(userBlocking);
-  // check if user is already blocked
+  //? Check if user already blocked
   if (currentUser?.blockedUsers?.includes(userIdToBlock)) {
-    throw new Error("User is already blocked");
+    throw new Error("User already blocked");
   }
   //push the user to be blocked in the array of the current user
-  currentUser?.blockedUsers?.push(userIdToBlock);
+  currentUser.blockedUsers.push(userIdToBlock);
   await currentUser.save();
-  res.status(200).json({
+  res.json({
     message: "User blocked successfully",
     status: "success",
   });
@@ -100,25 +96,54 @@ exports.blockUser = asyncHandler(async (req, res) => {
 //@access Private
 
 exports.unblockUser = asyncHandler(async (req, res) => {
+  //* Find the user to be unblocked
   const userIdToUnBlock = req.params.userIdToUnBlock;
   const userToUnBlock = await User.findById(userIdToUnBlock);
   if (!userToUnBlock) {
-    return res.status(404).json({ message: "User to be unblocked not found" });
+    throw new Error("User to be unblock not found");
   }
-
+  //find the current user
   const userUnBlocking = req.userAuth._id;
   const currentUser = await User.findById(userUnBlocking);
 
+  //check if user is blocked before unblocking
   if (!currentUser.blockedUsers.includes(userIdToUnBlock)) {
-    return res.status(400).json({ message: "User is not blocked" });
+    throw new Error("User not block");
   }
-
+  //remove the user from the current user blocked users array
   currentUser.blockedUsers = currentUser.blockedUsers.filter(
     (id) => id.toString() !== userIdToUnBlock.toString()
   );
+  //resave the current user
   await currentUser.save();
   res.json({
     status: "success",
     message: "User unblocked successfully",
+  });
+});
+
+//@desc   who view my profile
+//@route  GET /api/v1/users/profile-viewer/:userProfileId
+//@access Private
+exports.profileViewers = asyncHandler(async (req, res) => {
+  //* Find that we want to view his profile
+  const userProfileId = req.params.userProfileId;
+
+  const userProfile = await User.findById(userProfileId);
+  if (!userProfile) {
+    throw new Error("User to view his profile not found");
+  }
+  //find the current user
+  const currentUserId = req.userAuth._id;
+  //? Check if user already viewed the profile
+  if (userProfile?.profileViewers?.includes(currentUserId)) {
+    throw new Error("You have already viewed this profile");
+  }
+  //push the user current user id into the user profile
+  userProfile.profileViewers.push(currentUserId);
+  await userProfile.save();
+  res.json({
+    message: "You have successfully viewed his/her profile",
+    status: "success",
   });
 });

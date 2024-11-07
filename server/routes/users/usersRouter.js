@@ -5,6 +5,7 @@ const {
   getProfile,
   blockUser,
   unblockUser,
+  profileViewers,
 } = require("../../controllers/users/UserCtrl");
 const isLoggin = require("../../middileware/isLoggedIn");
 const userRouter = express.Router();
@@ -22,7 +23,10 @@ userRouter.get("/profile/:id", isLoggin, getProfile);
 userRouter.put("/block/:userIdToBlock", isLoggin, blockUser);
 
 //! unblock user
-userRouter.put("/unblock/:userIdTounBlock", isLoggin, unblockUser);
+userRouter.put("/unblock/:userIdToUnBlock", isLoggin, unblockUser);
+
+//! get profile viewers
+userRouter.get("/profile-viewer/:userProfileId", isLoggin, profileViewers);
 
 //? export userRouter
 module.exports = userRouter;
