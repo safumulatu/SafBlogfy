@@ -8,6 +8,7 @@ const {
   updatePost,
   likePost,
   dislikePost,
+  claps,
 } = require("../../controllers/post/postCtrl");
 const checkAccountVerification = require("../../middileware/isAccountVerified");
 const postRouter = express.Router();
@@ -23,5 +24,8 @@ postRouter.put("/likes/:id", isLoggin, likePost);
 
 //dislike post
 postRouter.put("/dislikes/:id", isLoggin, dislikePost);
+
+//clap a post
+postRouter.put("/claps/:id", isLoggin, claps);
 //export
 module.exports = postRouter;
