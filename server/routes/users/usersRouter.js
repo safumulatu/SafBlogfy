@@ -11,6 +11,8 @@ const {
   unFollowingUser,
   forgotPassword,
   resetPassword,
+  accountVerificationEmail,
+  verifyAccount,
 } = require("../../controllers/users/UserCtrl");
 const isLoggin = require("../../middileware/isLoggedIn");
 const userRouter = express.Router();
@@ -42,6 +44,15 @@ userRouter.put("/unfollowing/:userToUnFollowId", isLoggin, unFollowingUser);
 userRouter.post("/forgot-password", forgotPassword);
 //! reset password user
 userRouter.post("/reset-password/:resetToken", resetPassword);
+
+/// send account verification email
+userRouter.put(
+  "/account-verification-email",
+  isLoggin,
+  accountVerificationEmail
+);
+// send account verification email
+userRouter.put("/account-verification/:verifyToken", isLoggin, verifyAccount);
 
 //? export userRouter
 module.exports = userRouter;

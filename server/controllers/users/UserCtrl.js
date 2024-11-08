@@ -5,6 +5,7 @@ const User = require("../../model/User/User");
 const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
 const sendEmail = require("../../utils/sendEmail");
+const sendAccVerificationEmail = require("../../utils/sendAccountVerificationEmail");
 //! @route - api/v1/users/register
 //!@access - Public
 
@@ -253,9 +254,10 @@ exports.forgotPassword = asyncHandler(async (req, res) => {
   // send  email with token
   sendEmail(email, resetToken);
   // send response
-  res
-    .status(200)
-    .json({ message: "password reset email sent", resetToken: resetToken });
+  res.status(200).json({
+    message: "password reset email sent",
+    resetToken: "check your email",
+  });
 });
 
 // @route   POST /api/v1/users/reset-password/:resetToken
@@ -289,6 +291,52 @@ exports.resetPassword = asyncHandler(async (req, res) => {
   res.status(200).json({ message: "Password reset successfully" });
 });
 
-// @route   POST /api/v1/users/account-verification-email/
+// @route   POST /api/v1/users/account-verification-email
 // @desc    Send Account verification email
 // @access  Private
+
+exports.accountVerificationEmail = asyncHandler(async (req, res) => {
+  //Find the login user email
+  const user = await User.findById(req?.userAuth?._id);
+  if (!user) {
+    throw new Error("User not found");
+  }
+  //send the token
+  const token = await user.generateAccVerificationToken();
+  //resave
+  await user.save();
+  //send the email
+  sendAccVerificationEmail(user?.email, token);
+  res.status(200).json({
+    message: `Account verification email sent to ${user?.email}`,
+  });
+});
+
+// @route   POST /api/v1/users/verify-account/:verifyToken
+// @desc    Verify token
+// @access  Private
+
+exports.verifyAccount = asyncHandler(async (req, res) => {
+  //Get the id/token params
+  const { verifyToken } = req.params;
+  //Convert the token to actual token that has been saved in the db
+  const cryptoToken = crypto
+    .createHash("sha256")
+    .update(verifyToken)
+    .digest("hex");
+  //find the user by the crypto token
+  const userFound = await User.findOne({
+    accountVerificationToken: cryptoToken,
+    accountVerificationExpires: { $gt: Date.now() },
+  });
+  if (!userFound) {
+    throw new Error("Account verification  token is invalid or has expired");
+  }
+  //Update user account
+  userFound.isVerfied = true;
+  userFound.accountVerificationExpires = undefined;
+  userFound.accountVerificationToken = undefined;
+  //resave the user
+  await userFound.save();
+  res.status(200).json({ message: "Account  successfully verified" });
+});

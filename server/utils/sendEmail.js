@@ -27,7 +27,7 @@ const sendEmail = async (to, resetToken) => {
     };
     //send the email
     const info = await transporter.sendMail(message);
-    console.log("Email sent", info.messageId);
+    // console.log("Email sent", info.messageId);
   } catch (error) {
     console.log(error);
     throw new Error("Email sending failed");
