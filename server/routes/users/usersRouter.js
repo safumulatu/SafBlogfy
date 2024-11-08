@@ -9,6 +9,8 @@ const {
   followingUser,
   getUsers,
   unFollowingUser,
+  forgotPassword,
+  resetPassword,
 } = require("../../controllers/users/UserCtrl");
 const isLoggin = require("../../middileware/isLoggedIn");
 const userRouter = express.Router();
@@ -36,6 +38,10 @@ userRouter.get("/profile-viewer/:userProfileId", isLoggin, profileViewers);
 userRouter.put("/following/:userToFollowId", isLoggin, followingUser);
 //! unfollowing user
 userRouter.put("/unfollowing/:userToUnFollowId", isLoggin, unFollowingUser);
+//! forgot password user
+userRouter.post("/forgot-password", forgotPassword);
+//! reset password user
+userRouter.post("/reset-password/:resetToken", resetPassword);
 
 //? export userRouter
 module.exports = userRouter;

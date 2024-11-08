@@ -3,6 +3,8 @@ const asyncHandler = require("express-async-handler");
 
 const User = require("../../model/User/User");
 const jwt = require("jsonwebtoken");
+const crypto = require("crypto");
+const sendEmail = require("../../utils/sendEmail");
 //! @route - api/v1/users/register
 //!@access - Public
 
@@ -233,3 +235,60 @@ exports.unFollowingUser = asyncHandler(async (req, res) => {
     message: "You have unfollowed the user successfully",
   });
 });
+
+// @route   POST /api/v1/users/forgot-password
+// @desc   Forgot password
+// @access  Public
+exports.forgotPassword = asyncHandler(async (req, res) => {
+  const { email } = req.body;
+  // find the email in our db
+  const userFound = await User.findOne({ email });
+  if (!userFound) {
+    throw new Error("there is no such email in our system");
+  }
+  //! Create token
+  const resetToken = await userFound.generatePasswordResetToken();
+  //resave the user
+  await userFound.save();
+  // send  email with token
+  sendEmail(email, resetToken);
+  // send response
+  res
+    .status(200)
+    .json({ message: "password reset email sent", resetToken: resetToken });
+});
+
+// @route   POST /api/v1/users/reset-password/:resetToken
+// @desc   Reset password
+// @access  Public
+
+exports.resetPassword = asyncHandler(async (req, res) => {
+  //Get the id/token from email /params
+  const { resetToken } = req.params;
+  const { password } = req.body;
+  //Convert the token to actual token that has been saved in the db
+  const cryptoToken = crypto
+    .createHash("sha256")
+    .update(resetToken)
+    .digest("hex");
+  //find the user by the crypto token
+  const userFound = await User.findOne({
+    passwordResetToken: cryptoToken,
+    passwordResetExpires: { $gt: Date.now() },
+  });
+  if (!userFound) {
+    throw new Error("Password reset token is invalid or has expired");
+  }
+  // update the user password
+  const salt = await bcrypt.genSalt(10);
+  userFound.password = await bcrypt.hash(password, salt);
+  userFound.passwordResetExpires = undefined;
+  userFound.passwordResetToken = undefined;
+  // re save the user
+  await userFound.save();
+  res.status(200).json({ message: "Password reset successfully" });
+});
+
+// @route   POST /api/v1/users/account-verification-email/
+// @desc    Send Account verification email
+// @access  Private

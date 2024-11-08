@@ -8,6 +8,7 @@ const {
 const categoryRouter = require("./routes/category/categoryRouter");
 const postRouter = require("./routes/posts/PostRoutes");
 const commentRoute = require("./routes/comment/commentsRoute");
+const sendEmail = require("./utils/sendEmail");
 require("dotenv").config();
 const app = express();
 
@@ -17,6 +18,8 @@ const PORT = process.env.PORT || 3000;
 
 //? calling the database server
 connectDb();
+//send mail
+// sendEmail("safumulatu9@gmail.com", "ygdvvxjah");
 //! api endpoint
 app.use("/api/v1/users", userRouter);
 app.use("/api/v1/categories", categoryRouter);
