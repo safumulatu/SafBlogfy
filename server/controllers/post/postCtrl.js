@@ -194,7 +194,7 @@ exports.dislikePost = asyncHandler(async (req, res) => {
 exports.claps = asyncHandler(async (req, res) => {
   //Get the id of the post
   const { id } = req.params;
-  //Find the post
+  //Find the posts
   const post = await Post.findById(id);
   if (!post) {
     throw new Error("Post not found");
