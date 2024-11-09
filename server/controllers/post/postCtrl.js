@@ -50,7 +50,32 @@ exports.createPost = asyncHandler(async (req, res) => {
 //@access Private
 
 exports.getPosts = asyncHandler(async (req, res) => {
-  const posts = await Post.find({}).populate("comments");
+  // !find all users who have blocked the logged-in user
+  const loggedInUserId = req.userAuth?._id;
+  //get current time
+  const currentTime = new Date();
+  const usersBlockingLoggedInuser = await User.find({
+    blockedUsers: loggedInUserId,
+  });
+  // Extract the IDs of users who have blocked the logged-in user
+  const blockingUsersIds = usersBlockingLoggedInuser?.map((user) => user?._id);
+  //! Get the category, searchterm from request
+  const category = req.query.category;
+  const searchTerm = req.query.searchTerm;
+  let query = {
+    author: { $nin: blockingUsersIds },
+    $or: [
+      {
+        shedduledPublished: { $lte: currentTime },
+        shedduledPublished: null,
+      },
+    ],
+  };
+  const posts = await Post.find(query).populate({
+    path: "author",
+    model: "User",
+    select: "email username role",
+  });
   res.status(200).json({
     status: "success",
     message: "Posts fetched successfully",
@@ -210,4 +235,38 @@ exports.claps = asyncHandler(async (req, res) => {
     }
   );
   res.status(200).json({ message: "Post clapped successfully.", updatedPost });
+});
+
+//@desc   Shedule a post
+//@route  PUT /api/v1/posts/schedule/:postId
+//@access Private
+
+exports.schedule = asyncHandler(async (req, res) => {
+  // get the payload
+  const { schedulePublish } = req.body;
+  const { postId } = req.params;
+  // check if the post  exists and schedule published found
+  if (!postId || !schedulePublish) {
+    throw new Error("PostID and schedule date are required");
+  }
+  // find the post
+  const post = await Post.findById(postId);
+  if (!post) {
+    throw new Error("Post not found");
+  }
+  //check if the user is the auther of the post
+  if (post.author.toString() !== req.userAuth._id.toString()) {
+    throw new Error("You can only schedule your own post");
+  }
+  const scheduleDate = new Date(schedulePublish);
+  const currentDate = new Date();
+  if (scheduleDate < currentDate) {
+    throw new Error("Schedule date cannot be in the past");
+  }
+  //update the post
+  post.shedduledPublished = scheduleDate;
+  await post.save();
+  res
+    .status(200)
+    .json({ status: "success", message: "Post scheduled successfully" });
 });

@@ -19,7 +19,10 @@ exports.createCategory = asyncHandler(async (req, res) => {
 });
 
 exports.getCategories = asyncHandler(async (req, res) => {
-  const categories = await Category.find({});
+  const categories = await Category.find({}).populate({
+    path: "posts",
+    model: "Post",
+  });
   if (!categories) {
     throw new Error("category not found");
   }

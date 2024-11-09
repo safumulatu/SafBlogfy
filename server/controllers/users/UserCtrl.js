@@ -58,13 +58,40 @@ exports.login = asyncHandler(async (req, res) => {
 
 //! user prifile
 exports.getProfile = asyncHandler(async (req, res) => {
-  const { id } = req.params;
-  const user = await User.findById(id);
+  const id = req.userAuth._id;
+  const user = await User.findById(id)
+    .populate({
+      path: "posts",
+      model: "Post",
+    })
+    .populate({
+      path: "following",
+      model: "User",
+    })
+    .populate({
+      path: "followers",
+      model: "User",
+    })
+    .populate({
+      path: "blockedUsers",
+      model: "User",
+      select: "-password",
+    })
+    .populate({
+      path: "profileViewers",
+      model: "User",
+    });
+
   if (!user) {
     return res.status(404).json({ msg: "User not found" });
   }
+  //*********** */ remove password from response
   const { password: hashedPassword, ...userInfo } = user._doc;
-  res.json({ userInfo });
+  res.json({
+    status: "success",
+    message: "profilefetched",
+    userInfo,
+  });
 });
 //@desc   get all user
 //@route  GET /api/v1/users/

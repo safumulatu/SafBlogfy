@@ -26,7 +26,7 @@ userRouter.post("/login", login);
 //! get all users
 userRouter.get("/", getUsers);
 //! get profile
-userRouter.get("/profile/:id", isLoggin, getProfile);
+userRouter.get("/profile", isLoggin, getProfile);
 
 //! block user
 userRouter.put("/block/:userIdToBlock", isLoggin, blockUser);
