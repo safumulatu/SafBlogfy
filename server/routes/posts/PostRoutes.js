@@ -1,5 +1,6 @@
 const express = require("express");
 const isLoggin = require("../../middileware/isLoggedIn");
+const multer = require("multer");
 const {
   createPost,
   getPosts,
@@ -12,10 +13,20 @@ const {
   schedule,
 } = require("../../controllers/post/postCtrl");
 const checkAccountVerification = require("../../middileware/isAccountVerified");
+const storage = require("../../utils/fileUpload");
 const postRouter = express.Router();
 
+//* file upload middleware
+const upload = multer({ storage });
+
 //import Post model
-postRouter.post("/", isLoggin, checkAccountVerification, createPost);
+postRouter.post(
+  "/",
+  isLoggin,
+  checkAccountVerification,
+  upload.single("image"),
+  createPost
+);
 postRouter.get("/", isLoggin, getPosts);
 postRouter.get("/:id", getPost);
 postRouter.delete("/:id", isLoggin, checkAccountVerification, deletePost);
